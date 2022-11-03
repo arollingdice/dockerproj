@@ -1,0 +1,46 @@
+import boto3
+import json
+from Widgets.widget import Widget
+
+class Request:
+    
+    def __init__(self, session, client, bucket_name):
+        self.session = session
+        self.client = self.session.client('s3')
+        self.bucket_name = bucket_name
+        self.op_type = ""
+        self.queue = []
+        
+    # return all existing requests in the bucket.
+    def request_queue(self, count):
+        if count == 0:
+            queue = self.client.list_objects_v2(Bucket=self.bucket_name)
+            self.queue = queue.get("Contents")
+            return self.queue
+        else:
+            return self.queue
+    
+    # return 1 request per function call;
+    def get_request(self, count):
+        return self.request_queue(count)[0]
+        
+    def json_key(self, count):
+        object_key = self.get_request(count)['Key']
+        response_from_client = self.client.get_object(Bucket=self.bucket_name, Key=object_key)
+        
+        object_json = json.loads(response_from_client['Body'].read().decode('utf-8'))
+        
+        return object_json
+        
+    def create_request(self, object_json):
+        self.op_type = object_json['type']
+        oj = object_json
+        
+        if self.op_type != "create":
+            raise TypeError("Incorrect request type. This function is for create request.")
+            
+        # parse JSON object to an Widget object.
+        new_widget = Widget(oj['type'], oj['requestId'], oj['widgetId'], 
+        oj['owner'], oj['label'], oj['description'],oj['otherAttributes'])
+        
+        return new_widget
