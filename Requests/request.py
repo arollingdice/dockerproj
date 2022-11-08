@@ -2,11 +2,13 @@ import boto3
 import json
 from Widgets.widget import Widget
 
+
+
 class Request:
     
     def __init__(self, session, client, bucket_name):
         self.session = session
-        self.client = self.session.client('s3')
+        self.client = self.session.client(client)
         self.bucket_name = bucket_name
         self.op_type = ""
         self.queue = []
@@ -34,13 +36,34 @@ class Request:
         
     def create_request(self, object_json):
         self.op_type = object_json['type']
-        oj = object_json
         
         if self.op_type != "create":
             raise TypeError("Incorrect request type. This function is for create request.")
             
         # parse JSON object to an Widget object.
-        new_widget = Widget(oj['type'], oj['requestId'], oj['widgetId'], 
-        oj['owner'], oj['label'], oj['description'],oj['otherAttributes'])
+        new_widget = Widget(object_json)
+        
+        return new_widget
+        
+    def delete_request(self, object_json):
+        self.op_type = object_json['type']
+        
+        if self.op_type != "delete":
+            raise TypeError("Incorrect request type. This function is for delete request.")
+            
+        # parse JSON object to an Widget object.
+        new_widget = Widget(object_json)
+        
+        return new_widget
+        
+    def update_request(self, object_json):
+        self.op_type = object_json['type']
+        oj = object_json
+        
+        if self.op_type != "update":
+            raise TypeError("Incorrect request type. This function is for update request.")
+            
+        # parse JSON object to an Widget object.
+        new_widget = Widget(object_json)
         
         return new_widget
